@@ -1,0 +1,155 @@
+{
+  "name": "News Delivery Agent",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Daily Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        500,
+        100
+      ],
+      "id": "2ef334b9-dc2a-499a-a3f0-445fa8882056"
+    },
+    {
+      "parameters": {
+        "url": "https://serpapi.com/search.json",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "q",
+              "value": "AI India"
+            },
+            {
+              "name": "engine",
+              "value": "google_news"
+            },
+            {
+              "name": "api_key",
+              "value": "31bce2e46a756bd8ee7432797d7c2c0b05f65c70d74ca3baea439c3b284defbb"
+            }
+          ]
+        }
+      },
+      "name": "Fetch Google News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        700,
+        100
+      ],
+      "id": "5d92efe0-1f14-43b3-abc6-95ccb247786f"
+    },
+    {
+      "parameters": {
+        "functionCode": "const interests = ['ai', 'technology', 'india', 'robotics'];\nconst news = items[0].json.news_results || [];\nconst filtered = news.filter(article => interests.some(i => (article.title + article.snippet).toLowerCase().includes(i)));\nreturn [{ json: { filteredNews: filtered } }];"
+      },
+      "name": "Filter by Interests",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        900,
+        100
+      ],
+      "id": "abc34907-9c04-4760-8e73-8f9f14b08eab"
+    },
+    {
+      "parameters": {
+        "functionCode": "const top = items[0].json.filteredNews.slice(0, 10).map((a, i) => `#${i+1} - ${a.title}\\n${a.link}\\n${a.snippet}\\n\\n`);\nreturn [{ json: { digest: top.join('') } }];"
+      },
+      "name": "Summarize & Rank",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        100
+      ],
+      "id": "e4257a60-7b04-4659-9206-25fba8f91bed"
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "subject": "Your Daily AI News Digest",
+        "message": "={{$json[\"digest\"]}}",
+        "toList": [
+          "n8n.ai.agent.wf@gmail.com"
+        ],
+        "additionalFields": {}
+      },
+      "name": "My Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        100
+      ],
+      "id": "f2f8a398-d5de-4ebc-a0af-cb357bfeeb75",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "F3IF6f8qVErH6urF",
+          "name": "Gmail account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch Google News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Google News": {
+      "main": [
+        [
+          {
+            "node": "Filter by Interests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter by Interests": {
+      "main": [
+        [
+          {
+            "node": "Summarize & Rank",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize & Rank": {
+      "main": [
+        [
+          {
+            "node": "My Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "16bf31f4-c374-460b-b639-4c8cb0a0d29f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "55e2735bffcce62b83a59871da8c1b208627f2c4166bab6f4f32ca56cb05869d"
+  },
+  "id": "C455mDlCH6EY1Tiw",
+  "tags": []
+}
